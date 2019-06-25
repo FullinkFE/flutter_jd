@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_jd/page/HomePage.dart';
+import 'package:flutter_jd/page/MainPage.dart';
+import 'package:flutter_jd/route/route.dart';
 
 void main() => runApp(MyApp());
 
@@ -20,8 +22,19 @@ class MyApp extends StatelessWidget {
         // Notice that the counter didn't reset back to zero; the application
         // is not restarted.
         primarySwatch: Colors.blue,
-      ),
-      home: Home(),
+      ), // 处理Named页面跳转 传递参数
+      onGenerateRoute: (RouteSettings settings) {
+        // 统一处理
+        String name = settings.name;
+        Function pageContentBuilder = routes[name];
+        if (pageContentBuilder != null) {
+          Route route = MaterialPageRoute(
+              builder: (context) =>
+                  pageContentBuilder(context, arguments: settings.arguments));
+          return route;
+        }
+      },
+      home: Main(),
     );
   }
 }
