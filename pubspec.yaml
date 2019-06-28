@@ -52,6 +52,8 @@ flutter:
     - resource/image/icon_qq.png
     - resource/image/icon_my_card.png
     - resource/image/over_bg.png
+    - resource/image/rect_bg.png
+    - resource/image/over_pure_bg.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
