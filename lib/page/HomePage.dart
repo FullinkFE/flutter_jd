@@ -676,7 +676,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
               ),
               SliverPersistentHeader(
                 pinned: true,
-                delegate: _CustomSliverPersistentHeaderDelegate(
+                delegate: CustomSliverPersistentHeaderDelegate(
                     minHeight: 60,
                     maxHeight: 60,
                     child: Row(
@@ -896,9 +896,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   }
 }
 
-class _CustomSliverPersistentHeaderDelegate
+class CustomSliverPersistentHeaderDelegate
     extends SliverPersistentHeaderDelegate {
-  _CustomSliverPersistentHeaderDelegate({
+  CustomSliverPersistentHeaderDelegate({
     @required this.minHeight,
     @required this.maxHeight,
     @required this.child,
@@ -921,7 +921,7 @@ class _CustomSliverPersistentHeaderDelegate
   }
 
   @override
-  bool shouldRebuild(_CustomSliverPersistentHeaderDelegate oldDelegate) {
+  bool shouldRebuild(CustomSliverPersistentHeaderDelegate oldDelegate) {
     return maxHeight != oldDelegate.maxHeight ||
         minHeight != oldDelegate.minHeight ||
         child != oldDelegate.child;

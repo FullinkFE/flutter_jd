@@ -58,8 +58,7 @@ class _ShoppingBusState extends State<ShoppingBus> {
                   ),
                 ),
               )
-            ]
-              ..addAll(("ABCDEFGHIJKLMNOPQRST").split("").map((value) {
+            ]..addAll(("ABCDEFGHIJKLMNOPQRST").split("").map((value) {
                 return SliverToBoxAdapter(
                   child: ListTile(
                     title: Text("child-$value"),
@@ -74,31 +73,25 @@ class _ShoppingBusState extends State<ShoppingBus> {
           ),
           show
               ? Positioned(
-            child: GestureDetector(child: _getFloatNavi(), onTap: () {
-              _scrollController?.jumpTo(0);
-            },),
-            bottom: 60,
-            right: 10,
-          )
+                  child: GestureDetector(
+                    child: getFloatNavi(),
+                    onTap: () {
+                      _scrollController?.jumpTo(0);
+                    },
+                  ),
+                  bottom: 60,
+                  right: 10,
+                )
               : SizedBox(),
         ],
       ),
     );
   }
 
-  Widget _getFloatNavi() {
-    return CircleAvatar(
-      child: Icon(Icons.arrow_upward),
-    );
-  }
-
   Widget _getBottomWidget() {
     return Container(
       height: 48,
-      width: MediaQuery
-          .of(context)
-          .size
-          .width,
+      width: MediaQuery.of(context).size.width,
       color: Colors.white,
       child: Wrap(
         crossAxisAlignment: WrapCrossAlignment.center,
@@ -133,4 +126,10 @@ class _ShoppingBusState extends State<ShoppingBus> {
       ),
     );
   }
+}
+
+Widget getFloatNavi() {
+  return CircleAvatar(
+    child: Icon(Icons.arrow_upward),
+  );
 }
