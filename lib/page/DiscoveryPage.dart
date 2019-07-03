@@ -27,10 +27,6 @@ class _DiscoveryState extends State<Discovery>
 
   double _top = -1;
 
-  var show = false;
-
-  ScrollController _scrollController;
-
   @override
   void initState() {
     super.initState();
@@ -44,6 +40,7 @@ class _DiscoveryState extends State<Discovery>
     return Stack(
       overflow: Overflow.clip,
       children: <Widget>[
+        //body内容
         NotificationListener<ScrollNotification>(
           onNotification: _scrollListener,
           child: Container(
@@ -107,6 +104,7 @@ class _DiscoveryState extends State<Discovery>
                       ),
                     ),
                   ),
+                  //tab标签
                   Container(
                     height: 48,
                     child: Row(
@@ -161,19 +159,6 @@ class _DiscoveryState extends State<Discovery>
                       image: AssetImage("resource/image/rect_bg.png"),
                       fit: BoxFit.cover)),
             )),
-        show
-            ? Positioned(
-                child: GestureDetector(
-                  child: getFloatNavi(),
-                  onTap: () {
-                    _scrollController?.jumpTo(
-                        MediaQuery.of(context).padding.top + kToolbarHeight);
-                  },
-                ),
-                bottom: 40,
-                right: 16,
-              )
-            : SizedBox()
       ],
     );
   }
@@ -204,10 +189,10 @@ class _DiscoveryState extends State<Discovery>
       DiscoverySelect(
         scrollController: getController,
       ),
-      DiscoveryFans(),
-      DiscoveryCollocation(),
-      DiscoveryLive(),
-      DiscoveryVideo(),
+      DiscoveryFans(scrollController: getController),
+      DiscoveryCollocation(scrollController: getController),
+      DiscoveryLive(scrollController: getController),
+      DiscoveryVideo(scrollController: getController),
     ]);
   }
 
@@ -304,10 +289,12 @@ class _DiscoveryState extends State<Discovery>
     }
   }
 
+  ///只作为监听fling滚动后执行动画
   void getController(ScrollController _scrollController) {
     print("getController back in $_scrollController");
-    this._scrollController = _scrollController;
     _scrollController?.addListener(() {
+      print(
+          "ScrollController listener in ${_scrollController.position.pixels}");
       if (_scrollController.position.activity is BallisticScrollActivity) {
         fling = true;
         print(
@@ -322,22 +309,22 @@ class _DiscoveryState extends State<Discovery>
 //          print(
 //              "not BallisticScrollActivity in ${_scrollController.position.isScrollingNotifier}");
       }
-      //控制右下角箭头显示
-      if (_scrollController.position.pixels >= 50) {
-        if (show) {
-          return;
-        }
-        setState(() {
-          show = !show;
-        });
-      } else {
-        if (!show) {
-          return;
-        }
-        setState(() {
-          show = !show;
-        });
-      }
+//      //控制右下角箭头显示
+//      if (_scrollController.position.pixels >= 50) {
+//        if (show) {
+//          return;
+//        }
+//        setState(() {
+//          show = !show;
+//        });
+//      } else {
+//        if (!show) {
+//          return;
+//        }
+//        setState(() {
+//          show = !show;
+//        });
+//      }
     });
   }
 }
