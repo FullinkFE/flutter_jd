@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_jd/page/HomePage.dart';
+import 'package:flutter_jd/widget/after_layout.dart';
+import 'package:quiver/iterables.dart';
 
 class ShoppingBus extends StatefulWidget {
   @override
@@ -37,19 +40,93 @@ class _ShoppingBusState extends State<ShoppingBus> {
     print("_ShoppingBusState initState in ");
   }
 
+  var tabStrs = "全部,降价,常买,分类";
+  int index = 0;
+
   @override
   Widget build(BuildContext context) {
 //    super.build(context);
     return Scaffold(
-      appBar: AppBar(
-        title: Text("购物车"),
-        centerTitle: true,
-      ),
-      body: Stack(
+//      appBar: AppBar(
+//        title: Text("购物车"),
+//        centerTitle: true,
+//      ),
+      body: SafeArea(
+          child: Stack(
         children: <Widget>[
           CustomScrollView(
             controller: _scrollController,
             slivers: <Widget>[
+              SliverPersistentHeader(
+                delegate: CustomSliverPersistentHeaderDelegate(
+                    child: Container(
+                        color: Colors.white,
+                        child: Wrap(
+                          runAlignment: WrapAlignment.center,
+                          alignment: WrapAlignment.center,
+                          children: <Widget>[
+                            Text("购物车"),
+                            Icon(Icons.location_on)
+                          ],
+                        )),
+                    minHeight: kToolbarHeight,
+                    maxHeight: kToolbarHeight),
+//                pinned: true,
+                floating: true,
+              ),
+              SliverPersistentHeader(
+                delegate: CustomSliverPersistentHeaderDelegate(
+                    child: Container(
+                      color: Colors.white,
+                      child: Row(
+                          children: tabStrs.split(",").map((_value) {
+                        return Expanded(
+                          child: GestureDetector(
+                            child: Wrap(
+                              runAlignment: WrapAlignment.center,
+                              direction: Axis.vertical,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: <Widget>[
+                                Text(_value),
+                                index == tabStrs.indexOf(_value)
+                                    ? Container(
+                                        width: 20,
+                                        height: 4,
+                                        margin: EdgeInsets.all(2),
+                                        decoration: BoxDecoration(
+                                            gradient: LinearGradient(colors: [
+                                          Colors.blueAccent,
+                                          Colors.white
+                                        ])),
+                                      )
+                                    : SizedBox()
+                              ],
+                            ),
+                            onTap: () {
+                              setState(() {
+                                index = tabStrs.indexOf(_value);
+                              });
+                            },
+                          ),
+                        );
+                      }).toList()),
+                    ),
+                    minHeight: 36,
+                    maxHeight: 36),
+                pinned: true,
+              ),
+              SliverList(
+                  delegate: SliverChildListDelegate.fixed(range(20).map((_num) {
+                return GestureDetector(
+                  child: Card(
+                    child: Text("商品-$_num"),
+                  ),
+                  onTap: () {
+                    print("商品-$_num");
+                    Navigator.pushNamed(context, "/good");
+                  },
+                );
+              }).toList())),
               SliverToBoxAdapter(
                 child: Center(
                   heightFactor: 2.0,
@@ -77,6 +154,8 @@ class _ShoppingBusState extends State<ShoppingBus> {
                     child: getFloatNavi(),
                     onTap: () {
                       _scrollController?.jumpTo(0);
+                      print(
+                          "head is : ${MediaQuery.of(context).padding.top},$kToolbarHeight}");
                     },
                   ),
                   bottom: 60,
@@ -84,7 +163,7 @@ class _ShoppingBusState extends State<ShoppingBus> {
                 )
               : SizedBox(),
         ],
-      ),
+      )),
     );
   }
 

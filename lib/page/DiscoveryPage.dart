@@ -210,7 +210,7 @@ class _DiscoveryState extends State<Discovery>
   ScrollDirection _scrollDirection;
   bool fling = false;
 
-  ///监听子页面滚动
+  ///监听页面滚动
   bool _scrollListener(ScrollNotification notification) {
 //    double progress =
 //        notification.metrics.pixels / notification.metrics.maxScrollExtent;
