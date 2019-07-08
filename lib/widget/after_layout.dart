@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 typedef onAfterCallBack = void Function(BuildContext context);
 
+///加载完成后回调组件
 class AfterLayout extends StatelessWidget {
   AfterLayout({Key key, this.child, this.onAfter, this.offset})
       : super(key: key);

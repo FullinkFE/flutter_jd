@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:quiver/iterables.dart';
 
+///发现-直播
 class DiscoveryLive extends StatefulWidget {
   DiscoveryLive({this.scrollController});
 

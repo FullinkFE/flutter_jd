@@ -1,15 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_jd/util/Constants.dart';
-import 'package:flutter_jd/widget/after_layout.dart';
-import 'package:flutter_page_indicator/flutter_page_indicator.dart';
-import 'package:flutter_swiper/flutter_swiper.dart';
-import 'package:quiver/iterables.dart';
 import 'dart:math' as math;
 
-import 'package:toast/toast.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_jd/util/constants.dart';
+import 'package:flutter_jd/widget/after_layout.dart';
+import 'package:flutter_swiper/flutter_swiper.dart';
+import 'package:quiver/iterables.dart';
 
+///分类item
 class _CategoryItem {
   final Icon _icon;
   final String _text;
@@ -17,6 +15,7 @@ class _CategoryItem {
   _CategoryItem(this._icon, this._text);
 }
 
+///首页
 class Home extends StatefulWidget {
   @override
   _HomeState createState() {
@@ -28,6 +27,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   ScrollController _scrollController;
   double _opacity = 1.0;
 
+  ///首页-可左右滚动数据源
   List<_CategoryItem> categories = [
     _CategoryItem(Icon(Icons.camera), "京东超市"),
     _CategoryItem(Icon(Icons.camera), "数码电器"),
@@ -69,16 +69,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
       ..addListener(() {
         ScrollPositionWithSingleContext _context =
             _scrollController.position as ScrollPositionWithSingleContext;
-        print(
-            "****************_scrollDistance:$_scrollDistance,_scrollOffset:${_scrollController.offset.floor()},_searchWidth:$_searchWidth,_searchTraverWidth:$_searchTraverWidth,_travelTop:$_travelTop,_travelTopDistance:$_travelTopDistance,_searchTop:$_searchTop,userScrollDirection:${_context.userScrollDirection},_opacity:$_opacity");
-//        print(
-//            "_HomeState _scrollController in ${_scrollController.offset},direction context:${_context.userScrollDirection}");
-//        if (_distanceTop.abs() >= _finalTop &&
-//            _context.userScrollDirection == ScrollDirection.reverse) {
-//          _scrollDistance =
-//              _scrollDistance ??= _scrollController.offset.floor().toDouble();
-//          return;
-//        }
         if (_travelTopDistance == 0 &&
                 ScrollDirection.reverse == _context.userScrollDirection ||
             (_scrollDistance != null &&
@@ -119,9 +109,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-//    super.build(context);
-//    SystemChrome.setSystemUIOverlayStyle(
-//        SystemUiOverlayStyle.light.copyWith(statusBarColor: Colors.red));
     return Stack(
       children: <Widget>[
         Positioned(
@@ -779,7 +766,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                     ],
                   ),
                 ),
-
                 Positioned(
                     top: _searchTop ??= kToolbarHeight + (_curOffset - 36) / 2,
                     child: LayoutBuilder(builder:
@@ -804,27 +790,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                             color: Colors.white),
                       );
                     }))
-//                Transform.translate(
-//                  offset: Offset(0, _distanceTop),
-//                  child: Container(
-//                    margin: EdgeInsets.symmetric(horizontal: 15),
-//                    height: 36,
-//                    width: _searchWidth,
-//                    padding: EdgeInsets.symmetric(horizontal: 6),
-//                    child: Wrap(
-//                      runAlignment: WrapAlignment.center,
-//                      alignment: WrapAlignment.spaceBetween,
-//                      children: <Widget>[
-//                        Icon(Icons.search),
-//                        Icon(Icons.camera)
-//                      ],
-//                    ),
-//                    decoration: ShapeDecoration(
-//                        shape: RoundedRectangleBorder(
-//                            borderRadius: BorderRadius.circular(18)),
-//                        color: Colors.redAccent),
-//                  ),
-//                ),
               ],
             ),
             decoration: BoxDecoration(
@@ -846,14 +811,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   //每页数据是10条
   int _categoryCount = 10;
 
+  ///构造当前显示的分类数据源，滚动后会重新计算当前显示的数据
   Widget _buildCategory(int index) {
     range(3);
     List tempLists = [];
-//    var i = categories.length >= (index + 1) * everyCount
-//        ? everyCount - 1
-//        : index * everyCount +
-//            categories.sublist(index * everyCount).length -
-//            1;
 
     tempLists = categories
         .getRange(
@@ -896,6 +857,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   }
 }
 
+///粘性头部具体代理类
 class CustomSliverPersistentHeaderDelegate
     extends SliverPersistentHeaderDelegate {
   CustomSliverPersistentHeaderDelegate({

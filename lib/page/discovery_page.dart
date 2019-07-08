@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_jd/page/ShoppingBusPage.dart';
 import 'package:flutter_jd/page/discovery_collocation_page.dart';
 import 'package:flutter_jd/page/discovery_fans_page.dart';
 import 'package:flutter_jd/page/discovery_live_page.dart';
@@ -8,6 +7,7 @@ import 'package:flutter_jd/page/discovery_love_page.dart';
 import 'package:flutter_jd/page/discovery_select_page.dart';
 import 'package:flutter_jd/page/discovery_video_page.dart';
 
+///发现首页
 class Discovery extends StatefulWidget {
   @override
   _DiscoveryState createState() {
@@ -36,7 +36,6 @@ class _DiscoveryState extends State<Discovery>
 
   @override
   Widget build(BuildContext context) {
-//    super.build(context);
     return Stack(
       overflow: Overflow.clip,
       children: <Widget>[
@@ -139,19 +138,6 @@ class _DiscoveryState extends State<Discovery>
                           ));
                         }).toList()),
                   ),
-//              SizedBox(
-//                height: 48,
-////                width: 48,
-//                child: TabBar(
-//                    onTap: _handTab2,
-//                    isScrollable: true,
-//                    indicatorSize: TabBarIndicatorSize.label,
-//                    indicatorColor: Colors.redAccent,
-//                    controller: _tabController,
-//                    tabs: categories.map((value) {
-//                      return Text(value);
-//                    }).toList()),
-//              ),
                 ],
               ),
               decoration: BoxDecoration(
@@ -163,6 +149,7 @@ class _DiscoveryState extends State<Discovery>
     );
   }
 
+  /// 初始化动画监听和数据处理
   void initRes() {
     _animationController = AnimationController(
         vsync: this,
@@ -196,24 +183,11 @@ class _DiscoveryState extends State<Discovery>
     ]);
   }
 
-  ///处理分类点击和滑动事件
-  void _handTab() {
-//    this.value = value;
-//    this._index = categories.indexOf(value);
-//    setState(() {});
-  }
-
-  void _handTab2(int value) {
-    print("onTab tabed $value");
-  }
-
   ScrollDirection _scrollDirection;
   bool fling = false;
 
   ///监听页面滚动
   bool _scrollListener(ScrollNotification notification) {
-//    double progress =
-//        notification.metrics.pixels / notification.metrics.maxScrollExtent;
     var pixel = notification.metrics.pixels.floor();
 
     if (notification is ScrollUpdateNotification) {
@@ -238,27 +212,18 @@ class _DiscoveryState extends State<Discovery>
           "pixel is $pixel,_direction is $_scrollDirection,_top:$_top，_animationController.value：${_animationController.value}");
       setState(() {});
       return false;
-//      print(
-//          "_scrollListener: ScrollUpdateNotification $_direction，_top:$_top,\n${notification.metrics.pixels.ceil()}");
-    } else if (notification is ScrollEndNotification) {
-//      print("_scrollListener: ScrollEndNotification");
-
     } else if (notification is UserScrollNotification) {
       if (notification.direction == ScrollDirection.idle) {
         return false;
       }
       _scrollDirection = notification.direction;
-//      print("UserScrollNotification，${notification.direction}");
-    } else if (notification is OverscrollNotification) {
-//      print("OverscrollNotification in");
     }
-//    return false;
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
     super.dispose();
+    _animationController.dispose();
   }
 
   bool isAnimating = false;
@@ -270,19 +235,15 @@ class _DiscoveryState extends State<Discovery>
       return;
     }
     isAnimating = true;
-    print(
-        "~~~~~~~~~~~~~~~~~~startAnim 22 in $direction,_animationController:$_animationController");
     if (direction == ScrollDirection.forward) {
 //      _animationController.reverse();
       _animationController.animateTo(0).whenComplete(() {
-        print("**********0***********");
         _top = 0;
         isAnimating = false;
       });
     } else {
 //      _animationController.forward();
       _animationController.animateTo(-48).whenComplete(() {
-        print("**********-48***********");
         _top = -48;
         isAnimating = false;
       });
@@ -291,14 +252,9 @@ class _DiscoveryState extends State<Discovery>
 
   ///只作为监听fling滚动后执行动画
   void getController(ScrollController _scrollController) {
-    print("getController back in $_scrollController");
     _scrollController?.addListener(() {
-      print(
-          "ScrollController listener in ${_scrollController.position.pixels}");
       if (_scrollController.position.activity is BallisticScrollActivity) {
         fling = true;
-        print(
-            "BallisticScrollActivity in ${_scrollController.position.activity},fling:$fling,isAnimating:$isAnimating");
         if (isAnimating) {
           return;
         }
@@ -306,25 +262,7 @@ class _DiscoveryState extends State<Discovery>
       } else {
         fling = false;
         isAnimating = false;
-//          print(
-//              "not BallisticScrollActivity in ${_scrollController.position.isScrollingNotifier}");
       }
-//      //控制右下角箭头显示
-//      if (_scrollController.position.pixels >= 50) {
-//        if (show) {
-//          return;
-//        }
-//        setState(() {
-//          show = !show;
-//        });
-//      } else {
-//        if (!show) {
-//          return;
-//        }
-//        setState(() {
-//          show = !show;
-//        });
-//      }
     });
   }
 }

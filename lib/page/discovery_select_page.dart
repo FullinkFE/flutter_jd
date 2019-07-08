@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:quiver/iterables.dart';
 
+///发现-精选
 class DiscoverySelect extends StatefulWidget {
   DiscoverySelect({this.scrollController});
 
@@ -25,7 +26,6 @@ class _DiscoverySelectState extends State<DiscoverySelect> {
 
   @override
   Widget build(BuildContext context) {
-//    super.build(context);
     return GridView.count(
       physics: BouncingScrollPhysics(),
       shrinkWrap: true,

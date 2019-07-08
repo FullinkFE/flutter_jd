@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_jd/page/CategoryPage.dart';
-import 'package:flutter_jd/page/DiscoveryPage.dart';
-import 'package:flutter_jd/page/HomePage.dart';
-import 'package:flutter_jd/page/ShoppingBusPage.dart';
-import 'package:flutter_jd/page/UserPage.dart';
+import 'package:flutter_jd/page/category_page.dart';
+import 'package:flutter_jd/page/discovery_page.dart';
+import 'package:flutter_jd/page/home_page.dart';
+import 'package:flutter_jd/page/shoppingbus_page.dart';
+import 'package:flutter_jd/page/user_page.dart';
 
+///tab页启动容器，显示底部tab项
 class Main extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
@@ -13,6 +14,7 @@ class Main extends StatefulWidget {
 }
 
 class _MainState extends State<Main> {
+  //底部tab+页面数据
   final tabs = [
     _TabItem(Icon(Icons.home), "首页", Home()),
     _TabItem(Icon(Icons.category), "分类", Category()),
@@ -25,12 +27,6 @@ class _MainState extends State<Main> {
   @override
   void initState() {
     super.initState();
-//    _getTabs().then((items) {
-//      print("656666 $items");
-////      setState(() {
-////        tabs = items;
-////      });
-//    });
   }
 
   @override
@@ -52,7 +48,6 @@ class _MainState extends State<Main> {
         currentIndex: _index,
         onTap: onTabClick,
         type: BottomNavigationBarType.fixed,
-//        fixedColor: Colors.redAccent,
       ),
     );
   }
@@ -66,30 +61,11 @@ class _MainState extends State<Main> {
   }
 }
 
-Future<List<_TabItem>> _getTabs() {
-  return Future.delayed(Duration(seconds: 2), () {
-    var _tabs = [
-      _TabItem(Icon(Icons.home), "首页", Home()),
-      _TabItem(Icon(Icons.category), "分类", Category()),
-      _TabItem(Icon(Icons.find_in_page), "发现", Discovery()),
-      _TabItem(Icon(Icons.shopping_cart), "购物车", ShoppingBus()),
-      _TabItem(Icon(Icons.account_box), "我的", User()),
-    ];
-    return _tabs;
-  });
-}
-
+///tab+page
 class _TabItem {
   final Icon _icon;
   final String _name;
   final Widget _page;
 
   _TabItem(this._icon, this._name, this._page);
-}
-
-class _KeyPage {
-  final PageStorageKey<_TabItem> _storageKey;
-  final Widget _page;
-
-  _KeyPage(this._storageKey, this._page);
 }

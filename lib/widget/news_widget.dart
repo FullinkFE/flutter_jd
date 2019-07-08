@@ -13,6 +13,7 @@ enum OutlineStyle {
   none
 }
 
+/// 维度消息简单装置组件
 class NewsWidget extends StatefulWidget {
   ///右上角消息数量
   final num newsCount;

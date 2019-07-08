@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_jd/page/CategoryPage.dart';
+import 'package:flutter_jd/page/category_page.dart';
 import 'package:flutter_jd/page/good_page.dart';
 
 ///所有路由集合

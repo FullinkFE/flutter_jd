@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_jd/page/ShoppingBusPage.dart';
+import 'package:flutter_jd/page/shoppingbus_page.dart';
 import 'package:quiver/iterables.dart';
 import 'package:chewie/chewie.dart';
 import 'package:video_player/video_player.dart';
 
+///发现-视频
 class DiscoveryVideo extends StatefulWidget {
   DiscoveryVideo({this.scrollController});
 
@@ -29,7 +30,7 @@ class _DiscoveryVideoState extends State<DiscoveryVideo> {
     chewieController = ChewieController(
       videoPlayerController: videoPlayerController,
       aspectRatio: 3 / 2,
-      autoPlay: true,
+      autoPlay: false,
       looping: true,
     );
     super.initState();

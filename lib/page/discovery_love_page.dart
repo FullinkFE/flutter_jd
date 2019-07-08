@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_jd/page/ShoppingBusPage.dart';
+import 'package:flutter_jd/page/shoppingbus_page.dart';
 import 'package:quiver/iterables.dart';
 
+///发现-关注
 class DiscoveryLove extends StatefulWidget {
   DiscoveryLove({this.scrollController});
 

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_jd/util/Constants.dart';
+import 'package:flutter_jd/util/constants.dart';
 import 'package:flutter_jd/widget/after_layout.dart';
-import 'package:quiver/iterables.dart';
-import 'package:toast/toast.dart';
 
+///分类Tab页
 class Category extends StatefulWidget {
   @override
   _CategoryState createState() {
@@ -12,6 +11,7 @@ class Category extends StatefulWidget {
   }
 }
 
+/// 分类数据源封装
 class _CateItem {
   var _title;
 
@@ -20,6 +20,7 @@ class _CateItem {
   _CateItem(this._title, this._goodItems);
 }
 
+/// 分类数据源封装
 class _GoodItem {
   final Icon _icon;
   final String _iconName;
@@ -56,7 +57,6 @@ class _CategoryState extends State<Category> {
           height: kToolbarHeight,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               AfterLayout(
                 child: Icon(Icons.scanner),
@@ -121,8 +121,6 @@ class _CategoryState extends State<Category> {
                         ),
                       ),
                       onTap: () {
-//                        Toast.show("为你推荐-$index", context,
-//                            gravity: Toast.CENTER);
                         showLoading = !showLoading;
                         _getData();
                         setState(() {
@@ -185,7 +183,7 @@ class _CategoryState extends State<Category> {
     );
   }
 
-  //模拟异步获取数据
+  ///模拟异步获取数据
   _getData() async {
     datas.clear();
     Future.delayed(Duration(seconds: 2), () {
@@ -216,6 +214,7 @@ class _CategoryState extends State<Category> {
     });
   }
 
+  /// 获取正在加载组件
   Widget _getLoadingWidget() {
     return Center(
       child: Wrap(

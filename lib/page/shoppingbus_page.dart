@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_jd/page/HomePage.dart';
+import 'package:flutter_jd/page/home_page.dart';
 import 'package:flutter_jd/widget/after_layout.dart';
 import 'package:quiver/iterables.dart';
 

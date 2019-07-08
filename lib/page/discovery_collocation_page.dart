@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quiver/iterables.dart';
-
+///发现Tab页
 class DiscoveryCollocation extends StatefulWidget {
   DiscoveryCollocation({this.scrollController});
 

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_jd/util/Constants.dart';
+import 'package:flutter_jd/util/constants.dart';
 import 'package:quiver/iterables.dart';
 import 'package:toast/toast.dart';
 
+///商品首页-待完善
 class Good extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
