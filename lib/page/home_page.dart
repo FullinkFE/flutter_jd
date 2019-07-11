@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_jd/util/constants.dart';
 import 'package:flutter_jd/widget/after_layout.dart';
+import 'package:flutter_jd/widget/arc_transition.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:quiver/iterables.dart';
 
@@ -13,6 +14,15 @@ class _CategoryItem {
   final String _text;
 
   _CategoryItem(this._icon, this._text);
+}
+
+///中间tab项数据
+class _MidTabItem {
+  final String _title;
+  final String _subTitle;
+  final AnimationController _animationController;
+
+  _MidTabItem(this._title, this._subTitle, this._animationController);
 }
 
 ///首页
@@ -26,6 +36,16 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> with TickerProviderStateMixin {
   ScrollController _scrollController;
   double _opacity = 1.0;
+  List<_MidTabItem> _midTabs;
+  int _initialAnim = 0;
+
+  //将要消失的动画控制器
+  AnimationController _currentAniController;
+
+  //将要显示的动画控制器
+  AnimationController _nextAniController;
+
+  PageController _mPageController = PageController(initialPage: 0);
 
   ///首页-可左右滚动数据源
   List<_CategoryItem> categories = [
@@ -62,9 +82,14 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   //需要向上/向下移动的距离，会动态改变
   double _travelTopDistance;
 
+  TabController _mTabController;
+
+  bool isPageCanChanged = true;
+
   @override
   void initState() {
     super.initState();
+    _initMidTab();
     _scrollController = ScrollController()
       ..addListener(() {
         ScrollPositionWithSingleContext _context =
@@ -117,7 +142,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           top: 81,
           width: MediaQuery.of(context).size.width,
           child: CustomScrollView(
-            shrinkWrap: true,
             controller: _scrollController,
             slivers: <Widget>[
               SliverToBoxAdapter(
@@ -577,7 +601,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                     ],
                   ),
                   decoration: ShapeDecoration(
-                      color: Colors.yellowAccent,
+//                      color: Colors.yellowAccent,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6))),
                 ),
@@ -585,7 +609,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
               SliverToBoxAdapter(
                 child: Container(
                   decoration: ShapeDecoration(
-                      color: Colors.pinkAccent,
+//                      color: Colors.pinkAccent,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6))),
                   margin: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
@@ -620,7 +644,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                 }
                                 return Container(
                                   width: 80,
-                                  color: Colors.redAccent,
+//                                  color: Colors.redAccent,
                                   margin: EdgeInsets.symmetric(
                                       horizontal: 5, vertical: 5),
                                   child: Wrap(
@@ -662,45 +686,88 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 ),
               ),
               SliverPersistentHeader(
-                pinned: true,
-                delegate: CustomSliverPersistentHeaderDelegate(
+                  pinned: true,
+                  delegate: CustomSliverPersistentHeaderDelegate(
                     minHeight: 60,
                     maxHeight: 60,
-                    child: Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: Container(
-                            color: Colors.redAccent,
-                          ),
-                        ),
-                        Expanded(
-                          child: Container(
-                            color: Colors.yellowAccent,
-                          ),
-                        ),
-                        Expanded(
-                          child: Container(
-                            color: Colors.greenAccent,
-                          ),
-                        ),
-                        Expanded(
-                          child: Container(
-                            color: Colors.pinkAccent,
-                          ),
-                        ),
-                        Expanded(
-                          child: Container(
-                            color: Colors.orangeAccent,
-                          ),
-                        ),
-                      ],
-                    )),
-              ),
-              SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                      (BuildContext context, int index) {
-                return Text("ooo-$index");
-              }, childCount: 40)),
+                    child: Container(
+                      color: Colors.white,
+                      width: MediaQuery.of(context).size.width,
+                      child: TabBar(
+                        onTap: (_index) {
+                          onPageChange(_index, p: _mPageController);
+                        },
+                        isScrollable: true,
+                        //是否可以滚动
+                        controller: _mTabController,
+                        labelColor: Colors.red,
+                        indicatorSize: TabBarIndicatorSize.label,
+                        unselectedLabelColor: Color(0xff666666),
+                        labelStyle: TextStyle(fontSize: 16.0),
+                        tabs: _buildTabs(),
+                      ),
+                    ),
+                  )),
+//              SliverList(
+//                  delegate: SliverChildListDelegate.fixed(range(40).map((_num) {
+//                return GestureDetector(
+//                  child: Card(
+//                    child: Text("商品-$_num"),
+//                  ),
+//                  onTap: () {
+//                    print("商品-$_num");
+//                  },
+//                );
+//              }).toList())),
+              SliverFillRemaining(
+                child: PageView.builder(
+                  physics: PageScrollPhysics(),
+                  itemCount: _midTabs.length,
+                  onPageChanged: (index) {
+//                    print("onPageChanged in $index $isPageCanChanged");
+                    //由于pageview切换是会回调这个方法,又会触发切换tabbar的操作,所以定义一个flag,控制pageview的回调
+                    if (isPageCanChanged) {
+                      onPageChange(index);
+                    }
+                  },
+                  controller: _mPageController,
+                  itemBuilder: (BuildContext context, int index) {
+                    return ListView.builder(
+                      physics: NeverScrollableScrollPhysics(),
+                      itemBuilder: (BuildContext context, int index) {
+                        return Text("$index");
+                      },
+                      itemCount: 60,
+                    );
+                  },
+                ),
+              )
+//              SliverList(
+//                  delegate: SliverChildBuilderDelegate(
+//                      (BuildContext context, int index) {
+//                return Container(
+//                  child: PageView.builder(
+//                    itemCount: _midTabs.length,
+//                    onPageChanged: (index) {
+//                      print("onPageChanged in $index");
+//                      //由于pageview切换是会回调这个方法,又会触发切换tabbar的操作,所以定义一个flag,控制pageview的回调
+//                      if (isPageCanChanged) {
+//                        onPageChange(index);
+//                      }
+//                    },
+//                    controller: mPageController,
+//                    itemBuilder: (BuildContext context, int index) {
+//                      return ListView.builder(
+//                        shrinkWrap: true,
+//                        itemBuilder: (BuildContext context, int index) {
+//                          return Text("$index");
+//                        },
+//                        itemCount: 50,
+//                      );
+//                    },
+//                  ),
+//                );
+//              }, childCount: 40)),
             ],
           ),
         ),
@@ -729,8 +796,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                           child: Wrap(
                             runAlignment: WrapAlignment.center,
                             children: <Widget>[
-                              Icon(Icons.wb_incandescent),
-                              Text("京东")
+                              Icon(
+                                Icons.wb_incandescent,
+                                color: Colors.white,
+                              ),
+                              Text("京东", style: TextStyle(color: Colors.white))
                             ],
                           ),
                           onAfter: (context) {
@@ -747,19 +817,40 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         runAlignment: WrapAlignment.center,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: <Widget>[
-                          Icon(Icons.grade),
-                          Wrap(
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            direction: Axis.vertical,
-                            children: <Widget>[
-                              Icon(Icons.scanner),
-                              Text("扫一扫")
-                            ],
+                          Icon(
+                            Icons.grade,
+                            color: Colors.white,
                           ),
                           Wrap(
                             crossAxisAlignment: WrapCrossAlignment.center,
                             direction: Axis.vertical,
-                            children: <Widget>[Icon(Icons.chat), Text("消息")],
+                            children: <Widget>[
+                              Icon(
+                                Icons.scanner,
+                                color: Colors.white,
+                              ),
+                              Text(
+                                "扫一扫",
+                                style: TextStyle(color: Colors.white),
+                              )
+                            ],
+                          ),
+                          GestureDetector(
+                            child: Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              direction: Axis.vertical,
+                              children: <Widget>[
+                                Icon(
+                                  Icons.chat,
+                                  color: Colors.white,
+                                ),
+                                Text("消息",
+                                    style: TextStyle(color: Colors.white))
+                              ],
+                            ),
+                            onTap: () {
+//                              Navigator.pushNamed(context, "/testpt");
+                            },
                           ),
                         ],
                       )
@@ -855,6 +946,120 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
       ),
     );
   }
+
+  void _initMidTab() {
+    _midTabs = <_MidTabItem>[
+      _MidTabItem(
+          "精选",
+          "为你推荐",
+          AnimationController(
+              vsync: this, duration: Duration(milliseconds: 200))),
+      _MidTabItem(
+          "超市",
+          "百货生鲜",
+          AnimationController(
+              vsync: this, duration: Duration(milliseconds: 200))),
+      _MidTabItem(
+          "电器",
+          "3C家电",
+          AnimationController(
+              vsync: this, duration: Duration(milliseconds: 200))),
+      _MidTabItem(
+          "时尚",
+          "美妆穿搭",
+          AnimationController(
+              vsync: this, duration: Duration(milliseconds: 200))),
+      _MidTabItem(
+          "生活",
+          "居家日用",
+          AnimationController(
+              vsync: this, duration: Duration(milliseconds: 200))),
+    ];
+
+    _mTabController = TabController(
+      length: _midTabs.length,
+      vsync: this,
+    );
+  }
+
+  onPageChange(int index, {PageController p, TabController t}) async {
+    print(
+        '_HomeState.onPageChange _mPageController,$index, ${_mPageController.page.toInt()},p:$p');
+
+    //点击Tab选项卡
+    if (p != null) {
+      print('~~~~~~~~~~~~ ppp ${_mPageController.page.toInt()}');
+      _currentAniController =
+          _midTabs[_mPageController.page.toInt()]._animationController;
+      isPageCanChanged = false;
+      await _mPageController.animateToPage(index,
+          duration: Duration(milliseconds: 500), curve: Curves.ease);
+      isPageCanChanged = true;
+      _nextAniController = _midTabs[index]._animationController;
+      _startAnim();
+    } else {
+      //滑动pageview
+      _mTabController.animateTo(index);
+      _currentAniController =
+          _midTabs[_mTabController.previousIndex]._animationController;
+      print(
+          '_HomeState.onPageChange _mTabController,$index, ${_mTabController.previousIndex},p:$p');
+      _nextAniController = _midTabs[index]._animationController;
+      _startAnim();
+    }
+  }
+
+  _buildTabs() {
+    return _midTabs.map<Widget>((_midTab) {
+      return Stack(
+        alignment: Alignment.center,
+        children: <Widget>[
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Text(_midTab._title),
+              Text(
+                _midTab._subTitle,
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+          Positioned(
+            child: Container(
+              height: 8,
+              width: 16,
+              child: ArcTransition(
+                animation: _midTab._animationController,
+                reverse: _initialAnim != _midTabs.indexOf(_midTab),
+              ),
+            ),
+            bottom: 6,
+          )
+        ],
+      );
+    }).toList();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _currentAniController?.dispose();
+    _nextAniController?.dispose();
+  }
+
+  void _startAnim() {
+    print('_HomeState._startAnim ${_nextAniController.status}');
+    if (_currentAniController == _midTabs[0]._animationController) {
+      _currentAniController?.forward();
+    } else {
+      _currentAniController?.reverse();
+    }
+    if (_nextAniController == _midTabs[0]._animationController) {
+      _nextAniController?.reverse();
+    } else {
+      _nextAniController?.forward();
+    }
+  }
 }
 
 ///粘性头部具体代理类
@@ -879,7 +1084,7 @@ class CustomSliverPersistentHeaderDelegate
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return new SizedBox.expand(child: child);
+    return SizedBox.expand(child: child);
   }
 
   @override

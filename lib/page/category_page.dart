@@ -108,15 +108,15 @@ class _CategoryState extends State<Category> {
                       behavior: HitTestBehavior.opaque,
                       child: Container(
                         color: _index == index
-                            ? Colors.redAccent
+                            ? Colors.white
                             : Theme.of(context).scaffoldBackgroundColor,
                         padding: EdgeInsets.symmetric(vertical: 10),
                         child: Wrap(
+                          spacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: <Widget>[
-                            _index == index
-                                ? Icon(Icons.last_page)
-                                : SizedBox(),
-                            Text("为你推荐-$index")
+                            _index == index ? _getRectIndicator() : SizedBox(),
+                            Text("热门分类-$index")
                           ],
                         ),
                       ),
@@ -186,7 +186,7 @@ class _CategoryState extends State<Category> {
   ///模拟异步获取数据
   _getData() async {
     datas.clear();
-    Future.delayed(Duration(seconds: 2), () {
+    Future.delayed(Duration(milliseconds: 800), () {
       var childs = [
         _GoodItem(Icon(Icons.sync_problem), "拉杆箱1"),
         _GoodItem(Icon(Icons.sync_problem), "拉杆箱2"),
@@ -227,6 +227,15 @@ class _CategoryState extends State<Category> {
           Text("加载中...")
         ],
       ),
+    );
+  }
+
+  _getRectIndicator() {
+    return Container(
+      width: 2,
+      margin: EdgeInsets.only(left: 2),
+      height: 10,
+      color: Colors.redAccent,
     );
   }
 }
