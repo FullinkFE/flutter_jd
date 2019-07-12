@@ -68,13 +68,23 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     _CategoryItem(Icon(Icons.camera), "拍拍二手"),
   ];
 
-  double _scrollDistance;
-  double _curOffset = 58;
+  //触发向上滚动的临界点
+  int _scrollDistance;
 
-  //search的宽度，不会变化
+  //search的宽度，不变化（重新初始化赋值用）
   double _searchWidth;
+
+  //实际变化的搜索框宽度
   double _searchTraverWidth;
-  double _searchTop;
+
+  //搜索栏的高度
+  double _searchHeight = 36;
+
+  //搜索框上边距离状态栏的高度
+  double _searchTravelTop;
+
+  //搜索栏的一层父容器高度
+  double _searchContainerHeight = 58;
 
   //需要向上/向下移动的距离，不会动态改变
   double _travelTop;
@@ -86,6 +96,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
   bool isPageCanChanged = true;
 
+  AnimationController _animationController;
+
+  bool fling = false;
+  ScrollPositionWithSingleContext _context;
+
   @override
   void initState() {
     super.initState();
@@ -94,42 +109,41 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
       ..addListener(() {
         ScrollPositionWithSingleContext _context =
             _scrollController.position as ScrollPositionWithSingleContext;
-        if (_travelTopDistance == 0 &&
-                ScrollDirection.reverse == _context.userScrollDirection ||
-            (_scrollDistance != null &&
-                _scrollController.offset.floor().toDouble() >=
-                    _scrollDistance &&
+        this._context = _context;
+//        print(
+//            '_HomeState.initState pixels:${_scrollController.offset.toInt()}, _travelTopDistance:$_travelTopDistance,_travelTop:$_travelTop'
+//            '_direction:${_context.userScrollDirection}');
+
+        if ((_travelTopDistance == 0 &&
+                ScrollDirection.reverse == _context.userScrollDirection) ||
+            (_travelTopDistance >= _travelTop &&
                 ScrollDirection.forward == _context.userScrollDirection)) {
-          _scrollDistance ??= _scrollController.offset.floor().toDouble();
+          _scrollDistance ??= _scrollController.offset.toInt();
           return;
         }
-
-        //说明滚动上最上,不能再往下拉
-        if (_scrollController.offset.floor() == 0) {
-//          _scrollDistance = 0;
-          _curOffset = 58;
-          _searchTop = kToolbarHeight + (_curOffset - 36) / 2;
-          _searchTraverWidth = _searchWidth;
-          _travelTopDistance = _travelTop;
-        }
-
-        //向下滑动，屏幕下滚
-        if (ScrollDirection.forward == _context.userScrollDirection) {
-          _searchTraverWidth += 1.6;
-          _curOffset++;
-          _searchTop++;
-          _travelTopDistance++;
-        } else if (ScrollDirection.reverse == _context.userScrollDirection) {
-          _searchTraverWidth -= 1.6;
-          _curOffset--;
-          _searchTop--;
-          _travelTopDistance--;
-        }
-        _opacity = (_travelTopDistance / _travelTop).clamp(0, 1).toDouble();
-        setState(() {
-//          _searchWidth -= 10;
-        });
+        updateState(_context);
       });
+  }
+
+  ///更新头部动画属性
+  void updateState(ScrollPositionWithSingleContext _context, {double value}) {
+    if (_context == null) {
+      return;
+    }
+    //向下滑动，屏幕下滚
+    if (ScrollDirection.forward == _context.userScrollDirection) {
+      _searchTraverWidth += 1.6;
+      _searchContainerHeight += 1;
+      _searchTravelTop += 1;
+      _travelTopDistance += 1;
+    } else if (ScrollDirection.reverse == _context.userScrollDirection) {
+      _searchTraverWidth -= 1.6;
+      _searchContainerHeight -= 1;
+      _searchTravelTop -= 1;
+      _travelTopDistance -= 1;
+    }
+    _opacity = (_travelTopDistance / _travelTop).clamp(0, 1).toDouble();
+    setState(() {});
   }
 
   @override
@@ -141,48 +155,51 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           height: MediaQuery.of(context).size.height,
           top: 81,
           width: MediaQuery.of(context).size.width,
-          child: CustomScrollView(
-            controller: _scrollController,
-            slivers: <Widget>[
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      Container(
-                        height: kToolbarHeight,
-                        margin: EdgeInsets.only(top: 6),
-                        width: MediaQuery.of(context).size.width,
+          child: Listener(
+            onPointerUp: _onPointerUp,
+            onPointerDown: _onPointerDown,
+            child: CustomScrollView(
+              controller: _scrollController,
+              slivers: <Widget>[
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        Container(
+                          height: kToolbarHeight,
+                          margin: EdgeInsets.only(top: 6),
+                          width: MediaQuery.of(context).size.width,
 //                padding:
 //                    EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-                        child: Text(""),
-                        decoration: BoxDecoration(
-                            image: DecorationImage(
-                                image: AssetImage(
-                                    "resource/image/over_pure_bg.png"),
-                                fit: BoxFit.cover)),
-                      ),
-                      Container(
-                          height: 120,
-                          padding: EdgeInsets.symmetric(horizontal: 15),
-                          width: MediaQuery.of(context).size.width,
-                          color: Colors.white,
+                          child: Text(""),
+                          decoration: BoxDecoration(
+                              image: DecorationImage(
+                                  image: AssetImage(
+                                      "resource/image/over_pure_bg.png"),
+                                  fit: BoxFit.cover)),
+                        ),
+                        Container(
+                            height: 120,
+                            padding: EdgeInsets.symmetric(horizontal: 15),
+                            width: MediaQuery.of(context).size.width,
+                            color: Colors.white,
 //            margin: EdgeInsets.fromLTRB(0, 50, 0, 0),
-                          child: Swiper(
-                            itemBuilder: (BuildContext context, int index) {
-                              return Image.network(
-                                imgs.elementAt(index),
-                                fit: BoxFit.cover,
-                              );
-                            },
+                            child: Swiper(
+                              itemBuilder: (BuildContext context, int index) {
+                                return Image.network(
+                                  imgs.elementAt(index),
+                                  fit: BoxFit.cover,
+                                );
+                              },
 //                  curve: ElasticInCurve(),
-                            autoplay: true,
-                            onIndexChanged: (_) {
+                              autoplay: true,
+                              onIndexChanged: (_) {
 //                            var aa = [1,2,3,4,5];
 //                            print("aa sublist : ${aa.sublist(3).length}");
-                            },
-                            itemCount: imgs.length,
+                              },
+                              itemCount: imgs.length,
 //                          itemWidth: 200,
 //                          itemHeight: 100,
 //                          layout: SwiperLayout.CUSTOM,
@@ -194,190 +211,213 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 //                            new Offset(0.0, 0.0),
 //                            new Offset(370.0, -40.0)
 //                          ]),
-                            pagination: SwiperPagination(),
+                              pagination: SwiperPagination(),
 //                  control: SwiperControl(),
 //                  viewportFraction: 0.8,
-                            scale: 0.9,
-                          ))
-                    ],
+                              scale: 0.9,
+                            ))
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              SliverToBoxAdapter(
-                  child: Container(
-                margin: EdgeInsets.only(top: 6),
-                height: 120,
-                width: MediaQuery.of(context).size.width,
+                SliverToBoxAdapter(
+                    child: Container(
+                  margin: EdgeInsets.only(top: 6),
+                  height: 120,
+                  width: MediaQuery.of(context).size.width,
 //              color: Colors.lightBlueAccent,
-                child: Swiper(
-                  itemBuilder: (BuildContext context, int index) {
-                    return _buildCategory(index);
-                  },
-                  autoplay: false,
-                  outer: false,
-                  loop: false,
-                  itemCount: (categories.length / 10).ceil(),
-                  pagination: new SwiperCustomPagination(builder:
-                      (BuildContext context, SwiperPluginConfig config) {
-                    return Align(
-                      child: Wrap(
-                        children: range(config.itemCount).map((index) {
-                          return Container(
-                            margin: EdgeInsets.only(right: 6),
-                            width: config.activeIndex == index ? 10 : 6,
-                            height: 2,
-                            decoration: ShapeDecoration(
-                                color: config.activeIndex == index
-                                    ? Colors.black
-                                    : colorGreyFF939BAC,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(2))),
-                          );
-                        }).toList(),
-                      ),
-                      alignment: Alignment.bottomCenter,
-                    );
-                  }),
-                ),
-              )),
-              SliverToBoxAdapter(
-                child: Container(
+                  child: Swiper(
+                    itemBuilder: (BuildContext context, int index) {
+                      return _buildCategory(index);
+                    },
+                    autoplay: false,
+                    outer: false,
+                    loop: false,
+                    itemCount: (categories.length / 10).ceil(),
+                    pagination: new SwiperCustomPagination(builder:
+                        (BuildContext context, SwiperPluginConfig config) {
+                      return Align(
+                        child: Wrap(
+                          children: range(config.itemCount).map((index) {
+                            return Container(
+                              margin: EdgeInsets.only(right: 6),
+                              width: config.activeIndex == index ? 10 : 6,
+                              height: 2,
+                              decoration: ShapeDecoration(
+                                  color: config.activeIndex == index
+                                      ? Colors.black
+                                      : colorGreyFF939BAC,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(2))),
+                            );
+                          }).toList(),
+                        ),
+                        alignment: Alignment.bottomCenter,
+                      );
+                    }),
+                  ),
+                )),
+                SliverToBoxAdapter(
+                  child: Container(
 //                height: 100,
-                  width: 100,
-                  margin: EdgeInsets.only(top: 10, left: 15, right: 15),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          //京东秒杀
-                          Expanded(
-                              flex: 1,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: <Widget>[
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
-                                    children: <Widget>[
-                                      Text("京东秒杀"),
-                                      Container(
-                                        height: 20,
-                                        alignment: Alignment.centerLeft,
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: <Widget>[
-                                            Container(
-                                              height: 20,
-                                              padding: EdgeInsets.symmetric(
-                                                  horizontal: 4),
-                                              child: Text(
-                                                "14点场",
-                                                style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 12),
+                    width: 100,
+                    margin: EdgeInsets.only(top: 10, left: 15, right: 15),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            //京东秒杀
+                            Expanded(
+                                flex: 1,
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: <Widget>[
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: <Widget>[
+                                        Text("京东秒杀"),
+                                        Container(
+                                          height: 20,
+                                          alignment: Alignment.centerLeft,
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: <Widget>[
+                                              Container(
+                                                height: 20,
+                                                padding: EdgeInsets.symmetric(
+                                                    horizontal: 4),
+                                                child: Text(
+                                                  "14点场",
+                                                  style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 12),
+                                                ),
+                                                decoration: BoxDecoration(
+                                                    shape: BoxShape.rectangle,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                    color: Colors.redAccent),
                                               ),
-                                              decoration: BoxDecoration(
-                                                  shape: BoxShape.rectangle,
+                                              Padding(
+                                                padding: EdgeInsets.symmetric(
+                                                    horizontal: 6),
+                                                child: Text(
+                                                  "00.00.23",
+                                                  style:
+                                                      TextStyle(fontSize: 12),
+                                                ),
+                                              )
+                                            ],
+                                          ),
+                                          decoration: ShapeDecoration(
+//                                          color: Colors.yellowAccent,
+                                              shape: RoundedRectangleBorder(
+                                                  side: BorderSide(
+                                                      width: 1,
+                                                      color: Colors.redAccent),
                                                   borderRadius:
-                                                      BorderRadius.circular(10),
-                                                  color: Colors.redAccent),
+                                                      BorderRadius.circular(
+                                                          10))),
+//
+                                        )
+                                      ],
+                                    ),
+                                    Wrap(
+                                      alignment: WrapAlignment.spaceEvenly,
+                                      children: <Widget>[
+                                        Wrap(
+                                          direction: Axis.vertical,
+                                          children: <Widget>[
+                                            Image.asset(
+                                              "resource/image/icon_bill.png",
+                                              height: 30,
+                                              alignment: Alignment.center,
                                             ),
-                                            Padding(
-                                              padding: EdgeInsets.symmetric(
-                                                  horizontal: 6),
-                                              child: Text(
-                                                "00.00.23",
-                                                style: TextStyle(fontSize: 12),
-                                              ),
-                                            )
+                                            Text("￥479"),
+                                            Text("￥600",
+                                                style: TextStyle(
+                                                    decorationStyle:
+                                                        TextDecorationStyle
+                                                            .solid,
+                                                    decoration: TextDecoration
+                                                        .lineThrough)),
                                           ],
                                         ),
-                                        decoration: ShapeDecoration(
-//                                          color: Colors.yellowAccent,
-                                            shape: RoundedRectangleBorder(
-                                                side: BorderSide(
-                                                    width: 1,
-                                                    color: Colors.redAccent),
-                                                borderRadius:
-                                                    BorderRadius.circular(10))),
-//
-                                      )
-                                    ],
-                                  ),
-                                  Wrap(
-                                    alignment: WrapAlignment.spaceEvenly,
-                                    children: <Widget>[
-                                      Wrap(
-                                        direction: Axis.vertical,
-                                        children: <Widget>[
-                                          Image.asset(
-                                            "resource/image/icon_bill.png",
-                                            height: 30,
-                                            alignment: Alignment.center,
-                                          ),
-                                          Text("￥479"),
-                                          Text("￥600",
-                                              style: TextStyle(
-                                                  decorationStyle:
-                                                      TextDecorationStyle.solid,
-                                                  decoration: TextDecoration
-                                                      .lineThrough)),
-                                        ],
-                                      ),
-                                      Wrap(
-                                        direction: Axis.vertical,
-                                        children: <Widget>[
-                                          Image.asset(
-                                            "resource/image/icon_bill.png",
-                                            height: 30,
-                                            alignment: Alignment.center,
-                                          ),
-                                          Text("￥479"),
-                                          Text("￥600",
-                                              style: TextStyle(
-                                                  decorationStyle:
-                                                      TextDecorationStyle.solid,
-                                                  decoration: TextDecoration
-                                                      .lineThrough)),
-                                        ],
-                                      ),
-                                      Wrap(
-                                        direction: Axis.vertical,
-                                        children: <Widget>[
-                                          Image.asset(
-                                            "resource/image/icon_bill.png",
-                                            height: 30,
-                                            alignment: Alignment.center,
-                                          ),
-                                          Text("￥479"),
-                                          Text("￥600",
-                                              style: TextStyle(
-                                                  decorationStyle:
-                                                      TextDecorationStyle.solid,
-                                                  decoration: TextDecoration
-                                                      .lineThrough)),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              )),
-                          //发现好货
-                          Expanded(
-                            flex: 1,
-                            child: Row(
-                              children: <Widget>[
-                                Expanded(
-                                    child: Padding(
-                                  padding: EdgeInsets.all(10),
-                                  child: Wrap(
+                                        Wrap(
+                                          direction: Axis.vertical,
+                                          children: <Widget>[
+                                            Image.asset(
+                                              "resource/image/icon_bill.png",
+                                              height: 30,
+                                              alignment: Alignment.center,
+                                            ),
+                                            Text("￥479"),
+                                            Text("￥600",
+                                                style: TextStyle(
+                                                    decorationStyle:
+                                                        TextDecorationStyle
+                                                            .solid,
+                                                    decoration: TextDecoration
+                                                        .lineThrough)),
+                                          ],
+                                        ),
+                                        Wrap(
+                                          direction: Axis.vertical,
+                                          children: <Widget>[
+                                            Image.asset(
+                                              "resource/image/icon_bill.png",
+                                              height: 30,
+                                              alignment: Alignment.center,
+                                            ),
+                                            Text("￥479"),
+                                            Text("￥600",
+                                                style: TextStyle(
+                                                    decorationStyle:
+                                                        TextDecorationStyle
+                                                            .solid,
+                                                    decoration: TextDecoration
+                                                        .lineThrough)),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                )),
+                            //发现好货
+                            Expanded(
+                              flex: 1,
+                              child: Row(
+                                children: <Widget>[
+                                  Expanded(
+                                      child: Padding(
+                                    padding: EdgeInsets.all(10),
+                                    child: Wrap(
+                                      direction: Axis.vertical,
+                                      children: <Widget>[
+                                        Text("发现好货"),
+                                        Text("品质新生活"),
+                                        Image.asset(
+                                          "resource/image/icon_bill.png",
+                                          height: 60,
+                                          width: 50,
+                                          alignment: Alignment.center,
+                                        )
+                                      ],
+                                    ),
+                                  )),
+                                  Expanded(
+                                      child: Wrap(
+                                    runAlignment: WrapAlignment.center,
                                     direction: Axis.vertical,
                                     children: <Widget>[
-                                      Text("发现好货"),
-                                      Text("品质新生活"),
+                                      Text(""),
+                                      Text(""),
                                       Image.asset(
                                         "resource/image/icon_bill.png",
                                         height: 60,
@@ -385,329 +425,313 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                         alignment: Alignment.center,
                                       )
                                     ],
-                                  ),
-                                )),
-                                Expanded(
-                                    child: Wrap(
-                                  runAlignment: WrapAlignment.center,
-                                  direction: Axis.vertical,
-                                  children: <Widget>[
-                                    Text(""),
-                                    Text(""),
-                                    Image.asset(
-                                      "resource/image/icon_bill.png",
-                                      height: 60,
-                                      width: 50,
-                                      alignment: Alignment.center,
-                                    )
-                                  ],
-                                )),
-                              ],
-                            ),
-                          )
-                        ],
-                      ),
-                      //品牌秒杀
-                      Row(
-//                      crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Expanded(
-                              flex: 1,
-                              child: Row(
-                                children: <Widget>[
-                                  Expanded(
-                                      child: Column(
-                                    children: <Widget>[
-                                      Text("品牌秒杀"),
-                                      Text("低至9.9"),
-                                      Image.asset(
-                                        "resource/image/icon_qq.png",
-                                        height: 60,
-                                        alignment: Alignment.center,
-                                      )
-                                    ],
                                   )),
-                                  Expanded(
-                                      child: Column(
-                                    children: <Widget>[
-                                      Text("品类秒杀"),
-                                      Text("低至9.9"),
-                                      Image.asset(
-                                        "resource/image/icon_qq.png",
-                                        height: 60,
-                                        alignment: Alignment.center,
-                                      )
-                                    ],
-                                  ))
                                 ],
-                              )),
-                          //闪购
-                          Expanded(
-                            flex: 1,
-                            child: Row(
-                              children: <Widget>[
-                                Expanded(
-                                    child: Padding(
-                                  padding: EdgeInsets.all(10),
-                                  child: Wrap(
-                                    direction: Axis.vertical,
-                                    children: <Widget>[
-                                      Text("闪购"),
-                                      Text("品牌特卖"),
-                                      Image.asset(
-                                        "resource/image/icon_qq.png",
-                                        height: 60,
-                                        alignment: Alignment.center,
-                                      )
-                                    ],
-                                  ),
-                                )),
-                                Expanded(
-                                    child: Wrap(
-                                  runAlignment: WrapAlignment.center,
-                                  direction: Axis.vertical,
-                                  children: <Widget>[
-                                    Text(""),
-                                    Text(""),
-                                    Image.asset(
-                                      "resource/image/icon_qq.png",
-                                      height: 60,
-                                      alignment: Alignment.center,
-                                    )
-                                  ],
-                                )),
-                              ],
-                            ),
-                          )
-                        ],
-                      ),
-                      //逛好店
-                      Row(
-//                      crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Expanded(
-                              flex: 1,
-                              child: Row(
-                                children: <Widget>[
-                                  Expanded(
-                                      child: Column(
-                                    children: <Widget>[
-                                      Text("逛好店"),
-                                      Text("懂你想要的"),
-                                      Image.asset(
-                                        "resource/image/icon_qq.png",
-                                        height: 60,
-                                        alignment: Alignment.center,
-                                      )
-                                    ],
-                                  )),
-                                  Expanded(
-                                      child: Column(
-                                    children: <Widget>[
-                                      Text("新品首发"),
-                                      Text("玩转小魔方"),
-                                      Image.asset(
-                                        "resource/image/icon_qq.png",
-                                        height: 60,
-                                        alignment: Alignment.center,
-                                      )
-                                    ],
-                                  ))
-                                ],
-                              )),
-                          //排行榜
-                          Expanded(
-                            flex: 1,
-                            child: Row(
-                              children: <Widget>[
-                                Expanded(
-                                    child: Padding(
-                                  padding: EdgeInsets.all(10),
-                                  child: Wrap(
-                                    direction: Axis.vertical,
-                                    children: <Widget>[
-                                      Text("排行榜"),
-                                      Text("跟榜购好物"),
-                                      Image.asset(
-                                        "resource/image/icon_qq.png",
-                                        height: 60,
-                                        alignment: Alignment.center,
-                                      )
-                                    ],
-                                  ),
-                                )),
-                                Expanded(
-                                    child: Wrap(
-                                  runAlignment: WrapAlignment.center,
-                                  direction: Axis.vertical,
-                                  children: <Widget>[
-                                    Text(""),
-                                    Text(""),
-                                    Image.asset(
-                                      "resource/image/icon_qq.png",
-                                      height: 60,
-                                      alignment: Alignment.center,
-                                    )
-                                  ],
-                                )),
-                              ],
-                            ),
-                          )
-                        ],
-                      ),
-                      Container(
-                        color: Colors.redAccent,
-                        height: 2,
-                        margin: EdgeInsets.symmetric(horizontal: 0),
-                      ),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
-                        decoration: BoxDecoration(
-                            color: Colors.greenAccent,
-                            borderRadius: BorderRadius.only(
-                                bottomLeft: Radius.circular(6),
-                                bottomRight: Radius.circular(6))),
-                        margin: EdgeInsets.only(top: 1),
-                        child: Row(
-                          children: <Widget>[
-                            Text("快报"),
-                            Expanded(
-                                child: Container(
-                              height: 30,
-                              padding: EdgeInsets.symmetric(horizontal: 10),
-                              child: IgnorePointer(
-                                ignoring: true,
-                                child: Swiper(
-                                  itemBuilder:
-                                      (BuildContext context, int index) {
-                                    return Image.network(
-                                      imgs.elementAt(index),
-                                      fit: BoxFit.cover,
-                                    );
-                                  },
-                                  autoplay: true,
-//                              duration: 5,
-                                  scrollDirection: Axis.vertical,
-                                  onIndexChanged: (_) {},
-                                  itemCount: imgs.length,
-                                  scale: 1,
-                                ),
                               ),
-                            )),
-                            Text("更多"),
+                            )
                           ],
                         ),
-                      )
-                    ],
-                  ),
-                  decoration: ShapeDecoration(
-//                      color: Colors.yellowAccent,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6))),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Container(
-                  decoration: ShapeDecoration(
-//                      color: Colors.pinkAccent,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6))),
-                  margin: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      Wrap(
-                        alignment: WrapAlignment.spaceBetween,
-                        children: <Widget>[
-                          Text("我的频道"),
-                          Wrap(
-                            children: <Widget>[
-                              Text("发现更多频道"),
-                              Icon(Icons.arrow_forward)
-                            ],
-                          ),
-                          Container(
-//                          margin: EdgeInsets.symmetric(horizontal: 15),
-                            width: MediaQuery.of(context).size.width - 30,
-                            height: 120,
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemBuilder: (BuildContext context, int index) {
-                                if (index == 8) {
-                                  return Wrap(
+                        //品牌秒杀
+                        Row(
+//                      crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Expanded(
+                                flex: 1,
+                                child: Row(
+                                  children: <Widget>[
+                                    Expanded(
+                                        child: Column(
+                                      children: <Widget>[
+                                        Text("品牌秒杀"),
+                                        Text("低至9.9"),
+                                        Image.asset(
+                                          "resource/image/icon_qq.png",
+                                          height: 60,
+                                          alignment: Alignment.center,
+                                        )
+                                      ],
+                                    )),
+                                    Expanded(
+                                        child: Column(
+                                      children: <Widget>[
+                                        Text("品类秒杀"),
+                                        Text("低至9.9"),
+                                        Image.asset(
+                                          "resource/image/icon_qq.png",
+                                          height: 60,
+                                          alignment: Alignment.center,
+                                        )
+                                      ],
+                                    ))
+                                  ],
+                                )),
+                            //闪购
+                            Expanded(
+                              flex: 1,
+                              child: Row(
+                                children: <Widget>[
+                                  Expanded(
+                                      child: Padding(
+                                    padding: EdgeInsets.all(10),
+                                    child: Wrap(
+                                      direction: Axis.vertical,
+                                      children: <Widget>[
+                                        Text("闪购"),
+                                        Text("品牌特卖"),
+                                        Image.asset(
+                                          "resource/image/icon_qq.png",
+                                          height: 60,
+                                          alignment: Alignment.center,
+                                        )
+                                      ],
+                                    ),
+                                  )),
+                                  Expanded(
+                                      child: Wrap(
                                     runAlignment: WrapAlignment.center,
-                                    children: <Widget>[
-                                      Icon(Icons.arrow_back),
-                                      Text("查看更多")
-                                    ],
-                                  );
-                                }
-                                return Container(
-                                  width: 80,
-//                                  color: Colors.redAccent,
-                                  margin: EdgeInsets.symmetric(
-                                      horizontal: 5, vertical: 5),
-                                  child: Wrap(
-                                    alignment: WrapAlignment.spaceEvenly,
-                                    crossAxisAlignment:
-                                        WrapCrossAlignment.center,
                                     direction: Axis.vertical,
                                     children: <Widget>[
-                                      Container(
-                                        width: 60,
+                                      Text(""),
+                                      Text(""),
+                                      Image.asset(
+                                        "resource/image/icon_qq.png",
                                         height: 60,
-                                        alignment: Alignment.bottomCenter,
-                                        child: Text("推荐-$index"),
-                                        decoration: BoxDecoration(
-                                            image: DecorationImage(
-                                                image: AssetImage(
-                                                    "resource/image/icon_my_card.png"),
-                                                fit: BoxFit.cover)),
-                                      ),
-                                      Wrap(
-                                        crossAxisAlignment:
-                                            WrapCrossAlignment.center,
-                                        children: <Widget>[
-                                          Icon(Icons.opacity),
-                                          Text("京东会员")
-                                        ],
+                                        alignment: Alignment.center,
                                       )
                                     ],
+                                  )),
+                                ],
+                              ),
+                            )
+                          ],
+                        ),
+                        //逛好店
+                        Row(
+//                      crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Expanded(
+                                flex: 1,
+                                child: Row(
+                                  children: <Widget>[
+                                    Expanded(
+                                        child: Column(
+                                      children: <Widget>[
+                                        Text("逛好店"),
+                                        Text("懂你想要的"),
+                                        Image.asset(
+                                          "resource/image/icon_qq.png",
+                                          height: 60,
+                                          alignment: Alignment.center,
+                                        )
+                                      ],
+                                    )),
+                                    Expanded(
+                                        child: Column(
+                                      children: <Widget>[
+                                        Text("新品首发"),
+                                        Text("玩转小魔方"),
+                                        Image.asset(
+                                          "resource/image/icon_qq.png",
+                                          height: 60,
+                                          alignment: Alignment.center,
+                                        )
+                                      ],
+                                    ))
+                                  ],
+                                )),
+                            //排行榜
+                            Expanded(
+                              flex: 1,
+                              child: Row(
+                                children: <Widget>[
+                                  Expanded(
+                                      child: Padding(
+                                    padding: EdgeInsets.all(2),
+                                    child: Wrap(
+                                      direction: Axis.vertical,
+                                      children: <Widget>[
+                                        Text("排行榜"),
+                                        Text("跟榜购好物"),
+                                        Image.asset(
+                                          "resource/image/icon_qq.png",
+                                          height: 60,
+                                          alignment: Alignment.center,
+                                        )
+                                      ],
+                                    ),
+                                  )),
+                                  Expanded(
+                                      child: Wrap(
+                                    runAlignment: WrapAlignment.center,
+                                    direction: Axis.vertical,
+                                    children: <Widget>[
+                                      Text(""),
+                                      Text(""),
+                                      Image.asset(
+                                        "resource/image/icon_qq.png",
+                                        height: 60,
+                                        alignment: Alignment.center,
+                                      )
+                                    ],
+                                  )),
+                                ],
+                              ),
+                            )
+                          ],
+                        ),
+                        Container(
+                          color: Colors.redAccent,
+                          height: 2,
+                          margin: EdgeInsets.symmetric(horizontal: 0),
+                        ),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          decoration: BoxDecoration(
+                              color: Colors.greenAccent,
+                              borderRadius: BorderRadius.only(
+                                  bottomLeft: Radius.circular(6),
+                                  bottomRight: Radius.circular(6))),
+                          margin: EdgeInsets.only(top: 1),
+                          child: Row(
+                            children: <Widget>[
+                              Text("快报"),
+                              Expanded(
+                                  child: Container(
+                                height: 30,
+                                padding: EdgeInsets.symmetric(horizontal: 10),
+                                child: IgnorePointer(
+                                  ignoring: true,
+                                  child: Swiper(
+                                    itemBuilder:
+                                        (BuildContext context, int index) {
+                                      return Image.network(
+                                        imgs.elementAt(index),
+                                        fit: BoxFit.cover,
+                                      );
+                                    },
+                                    autoplay: true,
+//                              duration: 5,
+                                    scrollDirection: Axis.vertical,
+                                    onIndexChanged: (_) {},
+                                    itemCount: imgs.length,
+                                    scale: 1,
                                   ),
-                                );
-                              },
-                              itemCount: 9,
-                            ),
+                                ),
+                              )),
+                              Text("更多"),
+                            ],
                           ),
-                        ],
-                      ),
-                    ],
+                        )
+                      ],
+                    ),
+                    decoration: ShapeDecoration(
+//                      color: Colors.yellowAccent,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6))),
                   ),
                 ),
-              ),
-              SliverPersistentHeader(
-                  pinned: true,
-                  delegate: CustomSliverPersistentHeaderDelegate(
-                    minHeight: 60,
-                    maxHeight: 60,
-                    child: Container(
-                      color: Colors.white,
-                      width: MediaQuery.of(context).size.width,
-                      child: TabBar(
-                        onTap: (_index) {
-                          onPageChange(_index, p: _mPageController);
-                        },
-                        isScrollable: true,
-                        //是否可以滚动
-                        controller: _mTabController,
-                        labelColor: Colors.red,
-                        indicatorSize: TabBarIndicatorSize.label,
-                        unselectedLabelColor: Color(0xff666666),
-                        labelStyle: TextStyle(fontSize: 16.0),
-                        tabs: _buildTabs(),
-                      ),
+                SliverToBoxAdapter(
+                  child: Container(
+                    decoration: ShapeDecoration(
+//                      color: Colors.pinkAccent,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6))),
+                    margin: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        Wrap(
+                          alignment: WrapAlignment.spaceBetween,
+                          children: <Widget>[
+                            Text("我的频道"),
+                            Wrap(
+                              children: <Widget>[
+                                Text("发现更多频道"),
+                                Icon(Icons.arrow_forward)
+                              ],
+                            ),
+                            Container(
+//                          margin: EdgeInsets.symmetric(horizontal: 15),
+                              width: MediaQuery.of(context).size.width - 30,
+                              height: 120,
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemBuilder: (BuildContext context, int index) {
+                                  if (index == 8) {
+                                    return Wrap(
+                                      runAlignment: WrapAlignment.center,
+                                      children: <Widget>[
+                                        Icon(Icons.arrow_back),
+                                        Text("查看更多")
+                                      ],
+                                    );
+                                  }
+                                  return Container(
+                                    width: 80,
+//                                  color: Colors.redAccent,
+                                    margin: EdgeInsets.symmetric(
+                                        horizontal: 5, vertical: 5),
+                                    child: Wrap(
+                                      alignment: WrapAlignment.spaceEvenly,
+                                      crossAxisAlignment:
+                                          WrapCrossAlignment.center,
+                                      direction: Axis.vertical,
+                                      children: <Widget>[
+                                        Container(
+                                          width: 60,
+                                          height: 60,
+                                          alignment: Alignment.bottomCenter,
+                                          child: Text("推荐-$index"),
+                                          decoration: BoxDecoration(
+                                              image: DecorationImage(
+                                                  image: AssetImage(
+                                                      "resource/image/icon_my_card.png"),
+                                                  fit: BoxFit.cover)),
+                                        ),
+                                        Wrap(
+                                          crossAxisAlignment:
+                                              WrapCrossAlignment.center,
+                                          children: <Widget>[
+                                            Icon(Icons.opacity),
+                                            Text("京东会员")
+                                          ],
+                                        )
+                                      ],
+                                    ),
+                                  );
+                                },
+                                itemCount: 9,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                  )),
+                  ),
+                ),
+                SliverPersistentHeader(
+                    pinned: true,
+                    delegate: CustomSliverPersistentHeaderDelegate(
+                      minHeight: 60,
+                      maxHeight: 60,
+                      child: Container(
+                        color: Colors.white,
+                        width: MediaQuery.of(context).size.width,
+                        child: TabBar(
+                          onTap: (_index) {
+                            onPageChange(_index, p: _mPageController);
+                          },
+                          isScrollable: true,
+                          //是否可以滚动
+                          controller: _mTabController,
+                          labelColor: Colors.red,
+                          indicatorSize: TabBarIndicatorSize.label,
+                          unselectedLabelColor: Color(0xff666666),
+                          labelStyle: TextStyle(fontSize: 16.0),
+                          tabs: _buildTabs(),
+                        ),
+                      ),
+                    )),
 //              SliverList(
 //                  delegate: SliverChildListDelegate.fixed(range(40).map((_num) {
 //                return GestureDetector(
@@ -719,29 +743,29 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 //                  },
 //                );
 //              }).toList())),
-              SliverFillRemaining(
-                child: PageView.builder(
-                  physics: PageScrollPhysics(),
-                  itemCount: _midTabs.length,
-                  onPageChanged: (index) {
+                SliverFillRemaining(
+                  child: PageView.builder(
+                    physics: PageScrollPhysics(),
+                    itemCount: _midTabs.length,
+                    onPageChanged: (index) {
 //                    print("onPageChanged in $index $isPageCanChanged");
-                    //由于pageview切换是会回调这个方法,又会触发切换tabbar的操作,所以定义一个flag,控制pageview的回调
-                    if (isPageCanChanged) {
-                      onPageChange(index);
-                    }
-                  },
-                  controller: _mPageController,
-                  itemBuilder: (BuildContext context, int index) {
-                    return ListView.builder(
-                      physics: NeverScrollableScrollPhysics(),
-                      itemBuilder: (BuildContext context, int index) {
-                        return Text("$index");
-                      },
-                      itemCount: 60,
-                    );
-                  },
-                ),
-              )
+                      //由于pageview切换是会回调这个方法,又会触发切换tabbar的操作,所以定义一个flag,控制pageview的回调
+                      if (isPageCanChanged) {
+                        onPageChange(index);
+                      }
+                    },
+                    controller: _mPageController,
+                    itemBuilder: (BuildContext context, int index) {
+                      return ListView.builder(
+                        physics: NeverScrollableScrollPhysics(),
+                        itemBuilder: (BuildContext context, int index) {
+                          return Text("$index");
+                        },
+                        itemCount: 60,
+                      );
+                    },
+                  ),
+                )
 //              SliverList(
 //                  delegate: SliverChildBuilderDelegate(
 //                      (BuildContext context, int index) {
@@ -768,7 +792,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 //                  ),
 //                );
 //              }, childCount: 40)),
-            ],
+              ],
+            ),
           ),
         ),
         Positioned(
@@ -777,7 +802,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           child: Container(
             height: MediaQuery.of(context).padding.top +
                 kToolbarHeight +
-                _curOffset,
+                _searchContainerHeight,
             width: MediaQuery.of(context).size.width,
             padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
             child: Stack(
@@ -805,10 +830,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                           ),
                           onAfter: (context) {
                             _travelTop ??= _travelTopDistance ??=
-                                (kToolbarHeight + context.size.height) / 2;
-                            setState(() {});
-//                          print(
-//                              "京东 contribute is : ${context.findRenderObject().paintBounds}");
+                                (kToolbarHeight + _searchContainerHeight) / 2;
+//                            print("京东 contribute is : $_travelTop");
                           },
                         ),
                       ),
@@ -858,12 +881,13 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                   ),
                 ),
                 Positioned(
-                    top: _searchTop ??= kToolbarHeight + (_curOffset - 36) / 2,
+                    top: _searchTravelTop ??= kToolbarHeight +
+                        (_searchContainerHeight - _searchHeight) / 2,
                     child: LayoutBuilder(builder:
                         (BuildContext context, BoxConstraints constraints) {
                       return Container(
                         margin: EdgeInsets.symmetric(horizontal: 15),
-                        height: 36,
+                        height: _searchHeight,
                         width: _searchTraverWidth ??= _searchWidth ??=
                             (MediaQuery.of(context).size.width - 30),
                         padding: EdgeInsets.symmetric(horizontal: 6),
@@ -982,6 +1006,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     );
   }
 
+  ///page+tab监听
   onPageChange(int index, {PageController p, TabController t}) async {
     print(
         '_HomeState.onPageChange _mPageController,$index, ${_mPageController.page.toInt()},p:$p');
@@ -1045,6 +1070,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     super.dispose();
     _currentAniController?.dispose();
     _nextAniController?.dispose();
+    _animationController?.dispose();
+    _context?.dispose();
   }
 
   void _startAnim() {
@@ -1059,6 +1086,16 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     } else {
       _nextAniController?.forward();
     }
+  }
+
+  void _onPointerUp(PointerUpEvent event) {
+//    print("_onPointerUp in $event");
+    fling = true;
+  }
+
+  void _onPointerDown(PointerDownEvent event) {
+//    print("_onPointerDown in $event");
+    fling = false;
   }
 }
 
